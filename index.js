@@ -1,7 +1,8 @@
 const express=require('express')
 const cors=require('cors')
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
+const jwt = require('jsonwebtoken');
 const app=express()
 const port=process.env.PORT || 5000
 
@@ -9,8 +10,7 @@ app.use(cors())
 app.use(express.json())
 
 
-console.log
-console.log
+
 
 const uri = `mongodb+srv://${process.env.DB_Person}:${process.env.DB_Access}@cluster0.uqcmivv.mongodb.net/?retryWrites=true&w=majority&appName=Cluster`;
 
@@ -29,6 +29,23 @@ async function run() {
     await client.connect();
    
     const doctorCollection =client.db("carDoctorDB").collection("doctor");
+    const orderCollection =client.db("carDoctorDB").collection("order");
+
+    app.post('/jwt',async(req,res)=>{
+      const user=req.body;
+      console.log(user)
+      const token=jwt.sign(user, 'secret', { expiresIn: '1h' });
+      res.send(token)
+    })
+
+
+
+
+
+
+
+
+
 
 
     app.get('/doctors',async(req,res)=>{
@@ -37,7 +54,49 @@ async function run() {
       res.send(result)
       
     })
+    app.get('/doctors/:Id',async(req,res)=>{
+       const id=req.params.Id
+       const query = { _id: new ObjectId(id) };
+       
+       const result= await doctorCollection.findOne(query);
+       res.send(result)
+       
+    })
+    app.post('/order',async(req,res)=>{
+      const value=req.body;
+      const result = await orderCollection.insertOne(value);
+      res.send(result)
+      console.log(value)
 
+    })
+    app.get('/order',async(req,res) => {
+       console.log(req.query.email)
+       let query={}
+       if(req.query?.email){
+        query={email:req.query?.email}
+       }
+       const result=await orderCollection.find(query).toArray()
+       res.send(result)
+    })
+    app.delete('/order/:id',async(req,res) => {
+      const Id=req.params.id;
+      const query = { _id: new ObjectId(Id) };
+    const result = await orderCollection.deleteOne(query);
+    res.send(result)
+    })
+    app.patch('/ordered/:id',async(req,res)=>{
+      const Id=req.params.id;
+      const filter = { _id: new ObjectId(Id) };
+      const value=req.body;
+      console.log(value)
+      const updateDoc = {
+        $set: {
+          status:value.status
+        },
+      };
+      const result = await orderCollection.updateOne(filter, updateDoc);
+      res.send(result)
+    })
 
 
 
