@@ -3,6 +3,7 @@ const cors=require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
+// const cookieParser = require('cookie-parser')
 const app=express()
 const port=process.env.PORT || 5000
 
@@ -31,13 +32,31 @@ async function run() {
     const doctorCollection =client.db("carDoctorDB").collection("doctor");
     const orderCollection =client.db("carDoctorDB").collection("order");
 
-    app.post('/jwt',async(req,res)=>{
+    // app.post('/jwt',async(req,res)=>{
+    //   const user=req.body;
+    //   console.log(user)
+    //   const token=jwt.sign(user, 'secret', { expiresIn: '1h' });
+    //   res.send(token)
+    // })
+    // app.post('/token',(req,res)=>{
+    //   const user=req.body;
+    //   const userToken=jwt.sign(user,'secret',{expiresIn:'1h'})
+    //   console.log(user)
+    //   res.send(userToken)
+    // })
+    // app.post('/token',async(req,res)=>{
+    //   const user=req.body;
+    //   const userToken=jwt.sign(user,process.env.DB_Exist,{expiresIn:'1h'})
+    //   res.cookie('token',userToken,{expires:new Date(Date.now() + 900000),httpOnly:true,secure:false,sameSite:false,})
+    //   .send({success:true})
+      
+    // })
+    app.post('/token',async(req,res)=>{
       const user=req.body;
-      console.log(user)
-      const token=jwt.sign(user, 'secret', { expiresIn: '1h' });
-      res.send(token)
+      const userToken=jwt.sign(user,process.env.DB_Exist,{expiresIn:'1h'})
+      res.cookie('token',userToken,{expires:new Date(Date.now() + 900000),httpOnly:true,secure:false,sameSite:false})
+      .send('This coming')
     })
-
 
 
 
