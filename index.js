@@ -3,12 +3,18 @@ const cors=require('cors')
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const jwt = require('jsonwebtoken');
-// const cookieParser = require('cookie-parser')
+const cookieParser = require('cookie-parser')
 const app=express()
 const port=process.env.PORT || 5000
 
-app.use(cors())
+app.use(cors(
+  {
+    origin:"http://localhost:5173",
+    credentials:true
+  }
+))
 app.use(express.json())
+app.use(cookieParser())
 
 
 
@@ -32,39 +38,24 @@ async function run() {
     const doctorCollection =client.db("carDoctorDB").collection("doctor");
     const orderCollection =client.db("carDoctorDB").collection("order");
 
-    // app.post('/jwt',async(req,res)=>{
-    //   const user=req.body;
-    //   console.log(user)
-    //   const token=jwt.sign(user, 'secret', { expiresIn: '1h' });
-    //   res.send(token)
-    // })
-    // app.post('/token',(req,res)=>{
-    //   const user=req.body;
-    //   const userToken=jwt.sign(user,'secret',{expiresIn:'1h'})
-    //   console.log(user)
-    //   res.send(userToken)
-    // })
-    // app.post('/token',async(req,res)=>{
-    //   const user=req.body;
-    //   const userToken=jwt.sign(user,process.env.DB_Exist,{expiresIn:'1h'})
-    //   res.cookie('token',userToken,{expires:new Date(Date.now() + 900000),httpOnly:true,secure:false,sameSite:false,})
-    //   .send({success:true})
+    
+    
+        
+    app.post('/token',(req,res)=>{
+      const user=req.body
+      const userToken=jwt.sign(user,process.env.DB_Exist,{ expiresIn: '1h' })
       
-    // })
-    app.post('/token',async(req,res)=>{
-      const user=req.body;
-      const userToken=jwt.sign(user,process.env.DB_Exist,{expiresIn:'1h'})
-      res.cookie('token',userToken,{expires:new Date(Date.now() + 900000),httpOnly:true,secure:false,sameSite:false})
-      .send('This coming')
+      // console.log(setCookie)
+      res.cookie('token',userToken,{
+        expires: new Date(Date.now() + 900000),
+        httpOnly: true, 
+        secure: process.env.NODE_ENV === 'production', 
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
     })
+      .send('success');
 
 
-
-
-
-
-
-
+    })
 
 
     app.get('/doctors',async(req,res)=>{
@@ -89,7 +80,8 @@ async function run() {
 
     })
     app.get('/order',async(req,res) => {
-       console.log(req.query.email)
+      //  console.log(req.query.email)
+       console.log('client set token',req.cookies.token)
        let query={}
        if(req.query?.email){
         query={email:req.query?.email}
@@ -121,7 +113,7 @@ async function run() {
 
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
@@ -129,14 +121,6 @@ async function run() {
   }
 }
 run().catch(console.dir);
-
-
-
-
-
-
-
-
 
 app.get('/',(req,res)=>{
     res.send('This is car doctor server')
